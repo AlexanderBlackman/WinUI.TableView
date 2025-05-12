@@ -221,12 +221,12 @@ public partial class TableViewColumnHeader : ContentControl
             _searchBox = searchBox;
             _searchBox.PlaceholderText = TableViewLocalizedStrings.SearchBoxPlaceholder;
             _searchBox.TextChanged += OnSearchBoxTextChanged;
-#if WINDOWS
-            _searchBox.PreviewKeyDown += OnSearchBoxKeyDown; 
-#else
-            _searchBox.KeyDown += OnSearchBoxKeyDown;
-#endif
+
+            var enterPressed = new KeyboardAccelerator { Key = VirtualKey.Enter };
+            enterPressed.Invoked += OnSearchEnterInvoked;
+            _searchBox.KeyboardAccelerators.Add(enterPressed);
         }
+
 
         SetFilterButtonVisibility();
         EnsureGridLines();
@@ -244,16 +244,15 @@ public partial class TableViewColumnHeader : ContentControl
     }
 
     /// <summary>
-    /// Handles the KeyDown event for the search box.
+    /// If filtered text has been entered, Enter will close the searchbox.
     /// </summary>
-    private void OnSearchBoxKeyDown(object sender, KeyRoutedEventArgs e)
+    private void OnSearchEnterInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (e.Key == VirtualKey.Enter && _searchBox?.Text.Length > 0)
+        if (!string.IsNullOrEmpty(_searchBox?.Text))
         {
             _optionsFlyoutViewModel.OkCommand.Execute(null);
-
-            e.Handled = true;
         }
+        args.Handled = true;
     }
 
     /// <summary>
