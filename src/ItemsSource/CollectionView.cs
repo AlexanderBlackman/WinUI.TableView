@@ -259,6 +259,9 @@ internal partial class CollectionView : ICollectionView, ISupportIncrementalLoad
 
         var viewHash = new HashSet<object>(_view);
         var viewIndex = 0;
+
+
+
         for (var index = 0; index < _source.Count; index++)
         {
             var item = _source[index]!;
