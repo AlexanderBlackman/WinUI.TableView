@@ -108,6 +108,29 @@ bool isFiltered = tableView.IsFiltered;
 | [`ShowFilterItemsCount`](xref:WinUI.TableView.TableView.ShowFilterItemsCount) | Shows the count of matching rows next to each filter value |
 | [`UseRightClickForColumnFilter`](xref:WinUI.TableView.TableView.UseRightClickForColumnFilter) | Opens the filter flyout on column header right-click |
 | [`FilterHandler`](xref:WinUI.TableView.TableView.FilterHandler) | Custom filter handler implementation |
+| [`FilterItemTemplate`](xref:WinUI.TableView.TableViewColumn.FilterItemTemplate) | Per-column `DataTemplate` for the value slot of each filter item |
+| [`ShowFilterSearchBox`](xref:WinUI.TableView.TableViewColumn.ShowFilterSearchBox) | Per-column toggle for the filter flyout's search box (default `true`) |
+
+## Customizing filter item display
+
+By default each filter item renders [`TableViewFilterItem.ValueText`](xref:WinUI.TableView.TableViewFilterItem.ValueText), which is `Value?.ToString()`. Set [`FilterItemTemplate`](xref:WinUI.TableView.TableViewColumn.FilterItemTemplate) on a column to render the value differently — for example as an icon, or with a localized label:
+
+```xml
+<tv:TableViewComboBoxColumn Header="Priority" Binding="{Binding Priority}">
+    <tv:TableViewComboBoxColumn.FilterItemTemplate>
+        <DataTemplate x:DataType="tv:TableViewFilterItem">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <FontIcon Glyph="{x:Bind Value, Converter={StaticResource PriorityGlyphConverter}}" />
+                <TextBlock Text="{x:Bind Value, Converter={StaticResource PriorityLabelConverter}}" />
+            </StackPanel>
+        </DataTemplate>
+    </tv:TableViewComboBoxColumn.FilterItemTemplate>
+</tv:TableViewComboBoxColumn>
+```
+
+The template fills the value slot only; the checkbox, the select-all tri-state and the item count remain owned by the flyout. The data context is the [`TableViewFilterItem`](xref:WinUI.TableView.TableViewFilterItem), whose `Value` is the raw filter key — the same object the filter compares against, so the template changes presentation only.
+
+Note that the flyout's search box matches `Value.ToString()`, not the rendered template. If the template shows text that differs from `ToString()` (a localized label, for instance), consider setting `ShowFilterSearchBox="False"` on that column so the box cannot silently fail to match.
 
 ## Notes and limitations
 

@@ -335,6 +335,28 @@ public abstract partial class TableViewColumn : DependencyObject
     }
 
     /// <summary>
+    /// Gets or sets the template used for the value slot of each item in the column's filter flyout.
+    /// </summary>
+    /// <remarks>
+    /// The template's data context is a <see cref="TableViewFilterItem"/>. When null, the filter
+    /// flyout falls back to its default template, which displays <see cref="TableViewFilterItem.ValueText"/>.
+    /// </remarks>
+    public DataTemplate? FilterItemTemplate
+    {
+        get => (DataTemplate?)GetValue(FilterItemTemplateProperty);
+        set => SetValue(FilterItemTemplateProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the search box is shown in the column's filter flyout.
+    /// </summary>
+    public bool ShowFilterSearchBox
+    {
+        get => (bool)GetValue(ShowFilterSearchBoxProperty);
+        set => SetValue(ShowFilterSearchBoxProperty, value);
+    }
+
+    /// <summary>
     /// Gets or sets the order in which this column should be displayed.
     /// </summary>
     public int? Order
@@ -652,6 +674,16 @@ public abstract partial class TableViewColumn : DependencyObject
     /// Identifies the CanFilter dependency property.
     /// </summary>
     public static readonly DependencyProperty CanFilterProperty = DependencyProperty.Register(nameof(CanFilter), typeof(bool), typeof(TableViewColumn), new PropertyMetadata(true, OnCanFilterChanged));
+
+    /// <summary>
+    /// Identifies the FilterItemTemplate dependency property.
+    /// </summary>
+    public static readonly DependencyProperty FilterItemTemplateProperty = DependencyProperty.Register(nameof(FilterItemTemplate), typeof(DataTemplate), typeof(TableViewColumn), new PropertyMetadata(null));
+
+    /// <summary>
+    /// Identifies the ShowFilterSearchBox dependency property.
+    /// </summary>
+    public static readonly DependencyProperty ShowFilterSearchBoxProperty = DependencyProperty.Register(nameof(ShowFilterSearchBox), typeof(bool), typeof(TableViewColumn), new PropertyMetadata(true));
 
     /// <summary>
     /// Identifies the Order dependency property.

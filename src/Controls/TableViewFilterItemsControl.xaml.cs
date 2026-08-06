@@ -30,9 +30,16 @@ public partial class TableViewFilterItemsControl : UserControl
     /// </summary>
     internal async void Initialize()
     {
-        FilterItems = TableView?.FilterHandler?.GetFilterItems(ColumnHeader?.Column!, null).ToList();
+        var showSearchBox = ColumnHeader?.Column?.ShowFilterSearchBox is not false;
 
         if (searchBox is not null)
+        {
+            searchBox.Visibility = showSearchBox ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        FilterItems = ApplyItemTemplates(TableView?.FilterHandler?.GetFilterItems(ColumnHeader?.Column!, null).ToList());
+
+        if (searchBox is not null && showSearchBox)
         {
             await Task.Delay(100);
             await FocusManager.TryFocusAsync(searchBox, FocusState.Programmatic);
@@ -54,7 +61,27 @@ public partial class TableViewFilterItemsControl : UserControl
 
     private void OnSearchBoxTextChanged(object sender, TextChangedEventArgs e)
     {
-        FilterItems = TableView?.FilterHandler?.GetFilterItems(ColumnHeader?.Column!, searchBox!.Text);
+        FilterItems = ApplyItemTemplates(TableView?.FilterHandler?.GetFilterItems(ColumnHeader?.Column!, searchBox!.Text));
+    }
+
+    /// <summary>
+    /// Stamps each filter item with the column's filter item template, or the default one.
+    /// </summary>
+    private ICollection<TableViewFilterItem>? ApplyItemTemplates(ICollection<TableViewFilterItem>? items)
+    {
+        if (items is null)
+        {
+            return null;
+        }
+
+        var template = ColumnHeader?.Column?.FilterItemTemplate ?? Resources["DefaultFilterItemTemplate"] as DataTemplate;
+
+        foreach (var item in items)
+        {
+            item.DisplayTemplate = template;
+        }
+
+        return items;
     }
 
     /// <summary>

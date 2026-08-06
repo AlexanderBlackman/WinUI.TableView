@@ -149,7 +149,7 @@ public partial class TableViewCell : ContentControl
                 desiredWidth += BorderThickness.Right;
                 desiredWidth += _selectionBorder?.BorderThickness.Right ?? 0;
                 desiredWidth += _selectionBorder?.BorderThickness.Left ?? 0;
-                desiredWidth += _v_gridLine?.ActualWidth ?? 0d;
+                desiredWidth += GetVerticalGridlineWidth();
 
                 Column.DesiredWidth = Math.Max(Column.DesiredWidth, desiredWidth);
             }
@@ -164,7 +164,7 @@ public partial class TableViewCell : ContentControl
             contentWidth -= BorderThickness.Right;
             contentWidth -= _selectionBorder?.BorderThickness.Left ?? 0;
             contentWidth -= _selectionBorder?.BorderThickness.Right ?? 0;
-            contentWidth -= _v_gridLine?.ActualWidth ?? 0d;
+            contentWidth -= GetVerticalGridlineWidth();
 
             var height = Height is double.NaN ? double.PositiveInfinity : Height;
             var contentHeight = Math.Min(height, MaxHeight);
@@ -348,6 +348,21 @@ public partial class TableViewCell : ContentControl
     {
         return TableView?.GridLinesVisibility is TableViewGridLinesVisibility.All or TableViewGridLinesVisibility.Horizontal
             ? TableView.HorizontalGridLinesStrokeThickness : 0d;
+    }
+
+    /// <summary>
+    /// Gets the layout width taken by the vertical gridline.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately reads the stroke-thickness property rather than the gridline's ActualWidth:
+    /// MeasureOverride runs before the gridline has ever been arranged, so ActualWidth is 0 on a
+    /// freshly realised cell and 1 on a recycled one. That made the content clamp differ by a
+    /// pixel from row to row depending purely on measure order.
+    /// </remarks>
+    private double GetVerticalGridlineWidth()
+    {
+        return _v_gridLine is { Visibility: Visibility.Visible } && TableView is not null
+            ? TableView.VerticalGridLinesStrokeThickness : 0d;
     }
 
     /// <summary>

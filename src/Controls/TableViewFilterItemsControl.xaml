@@ -11,6 +11,13 @@
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!--  Fallback for columns that do not set TableViewColumn.FilterItemTemplate.  -->
+        <DataTemplate x:Key="DefaultFilterItemTemplate"
+                      x:DataType="local:TableViewFilterItem">
+            <TextBlock Text="{x:Bind ValueText}"
+                       TextWrapping="NoWrap" />
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Margin="8,4"
@@ -67,8 +74,9 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Text="{x:Bind ValueText}"
-                                       TextWrapping="NoWrap" />
+                            <ContentPresenter Content="{x:Bind}"
+                                              ContentTemplate="{x:Bind DisplayTemplate}"
+                                              VerticalAlignment="Center" />
 
                             <StackPanel Grid.Column="1"
                                         Orientation="Horizontal"

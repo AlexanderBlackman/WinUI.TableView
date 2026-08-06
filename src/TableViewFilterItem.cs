@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.UI.Xaml;
+using System.ComponentModel;
 
 namespace WinUI.TableView;
 
@@ -47,6 +48,15 @@ public partial class TableViewFilterItem : INotifyPropertyChanged
     /// Gets the text representation of the filter item's value, or a localized string for blank values if the value is null.
     /// </summary>
     public string ValueText => Value?.ToString() ?? TableViewLocalizedStrings.BlankFilterValue;
+
+    /// <summary>
+    /// Gets the template used to display this item in the filter flyout.
+    /// </summary>
+    /// <remarks>
+    /// Assigned by the filter items control from the column's <see cref="TableViewColumn.FilterItemTemplate"/>,
+    /// falling back to the flyout's default template.
+    /// </remarks>
+    public DataTemplate? DisplayTemplate { get; internal set; }
 
     /// <summary>
     /// Gets or sets the count of occurrences for the filter item.
