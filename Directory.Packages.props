@@ -10,7 +10,7 @@
     <PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="17.14.1" />
     <PackageVersion Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="0.4.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
-    <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="1.8.260528001" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="2.3.9" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.9.3" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.9.3" />
     <PackageVersion Include="Uno.WinUI" Version="6.2.87" Condition="$([MSBuild]::VersionLessThan($([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')), 'v9.0'))" />
