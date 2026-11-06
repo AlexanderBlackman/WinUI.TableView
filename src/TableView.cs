@@ -424,6 +424,15 @@ public partial class TableView : ListView
         return true;
     }
 
+    /// <summary>Commits the current cell through the normal cancellable edit lifecycle.</summary>
+    public bool CommitEdit()
+    {
+        if (!IsEditing || !CurrentCellSlot.HasValue || GetCellFromSlot(CurrentCellSlot.Value) is not { } cell) return true;
+        if (!EndCellEditing(TableViewEditAction.Commit, cell)) return false;
+        SetIsEditing(false);
+        return true;
+    }
+
     /// <summary>
     /// Handles shortcut keys.
     /// </summary>

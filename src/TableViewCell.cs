@@ -595,10 +595,21 @@ public partial class TableViewCell : ContentControl
 
         if (IsCurrent && !skipFocus)
         {
+            // Pointer-release scrolling can finish after the editor has received focus.
+            // Focusing the cell first would end hosts that commit on editor focus loss.
+            if (TableView?.IsEditing == true && Content is UIElement { IsHitTestVisible: true } editor)
+            {
+                editor.Focus(FocusState.Pointer);
+                return;
+            }
+
+            var originalContent = Content;
             Focus(FocusState.Pointer);
 
             await Task.Delay(20);
-            if (Content is UIElement { IsHitTestVisible: true } element)
+            if (IsLoaded && IsCurrent && ReferenceEquals(Content, originalContent)
+                && ReferenceEquals(Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(XamlRoot), this)
+                && Content is UIElement { IsHitTestVisible: true } element)
             {
                 element.Focus(FocusState.Pointer);
             }
