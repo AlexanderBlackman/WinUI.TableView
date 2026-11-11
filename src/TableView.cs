@@ -34,6 +34,11 @@ public partial class TableView : ListView
 {
     private TableViewHeaderRow? _headerRow;
     private ScrollViewer? _scrollViewer;
+    private FrameworkElement? _verticalScrollBarHost;
+
+    /// <summary>The measured space occupied by the visible vertical scrollbar, including its padding.</summary>
+    internal double VerticalScrollBarWidth => _verticalScrollBarHost is { Visibility: Visibility.Visible } host
+        ? host.ActualWidth : 0;
     private RowDefinition? _headerRowDefinition;
     private bool _shouldThrowSelectionModeChangedException;
     private bool _ensureColumns = true;
@@ -468,6 +473,7 @@ public partial class TableView : ListView
 
         _headerRow = GetTemplateChild("HeaderRow") as TableViewHeaderRow;
         _scrollViewer = GetTemplateChild("ScrollViewer") as ScrollViewer;
+        _verticalScrollBarHost = null;
         _headerRowDefinition = GetTemplateChild("HeaderRowDefinition") as RowDefinition;
         DragRectangleCanvas = GetTemplateChild("DragRectangleCanvas") as Canvas;
         _dragRectangle = GetTemplateChild("DragRectangle") as Border;
@@ -491,6 +497,7 @@ public partial class TableView : ListView
         var scrollPresenter = _scrollViewer?.FindDescendant<ScrollContentPresenter>();
         var xScrollBar = _scrollViewer?.FindDescendant<ScrollBar>(sb => sb.Name is "HorizontalScrollBar2");
         var yScrollBar = _scrollViewer?.FindDescendant<ScrollBar>(sb => sb.Name is "VerticalScrollBar");
+        _verticalScrollBarHost = yScrollBar is null ? null : VisualTreeHelper.GetParent(yScrollBar) as FrameworkElement;
 
         scrollPresenter?.PointerWheelChanged += OnScrollContentPresenterPointerWheelChanged;
 

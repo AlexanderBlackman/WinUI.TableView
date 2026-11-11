@@ -57,17 +57,12 @@ public partial class TableViewColumnHeaderAutomationPeer : FrameworkElementAutom
     protected override string GetNameCore()
     {
         var name = AutomationProperties.GetName(_owner);
-        if (!string.IsNullOrEmpty(name))
-        {
-            return name;
-        }
-
         if (_owner.Column is null)
         {
-            return base.GetNameCore();
+            return string.IsNullOrEmpty(name) ? base.GetNameCore() : name;
         }
 
-        var headerText = TableViewRowAutomationPeer.GetColumnHeaderText(_owner.Column);
+        var headerText = string.IsNullOrEmpty(name) ? TableViewRowAutomationPeer.GetColumnHeaderText(_owner.Column) : name;
 
         if (string.IsNullOrEmpty(headerText))
         {
@@ -92,6 +87,9 @@ public partial class TableViewColumnHeaderAutomationPeer : FrameworkElementAutom
     /// <inheritdoc/>
     protected override string GetHelpTextCore()
     {
+        var helpText = AutomationProperties.GetHelpText(_owner);
+        if (!string.IsNullOrEmpty(helpText)) { return helpText; }
+
         var column = _owner.Column;
         if (column is null)
         {

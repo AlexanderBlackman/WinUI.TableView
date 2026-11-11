@@ -42,6 +42,7 @@ public partial class TableViewHeaderRow : Control
     private Image? _dragHeaderImage;
     private DispatcherTimer? _desiredWidthTimer;
     private bool _calculatingHeaderWidths;
+    private double _availableColumnsWidth = double.NaN;
     private int _dropColumnIndex;
     private bool _isValidDropTarget;
     private readonly Dictionary<DependencyProperty, long> _callbackTokens = [];
@@ -52,6 +53,29 @@ public partial class TableViewHeaderRow : Control
     public TableViewHeaderRow()
     {
         DefaultStyleKey = typeof(TableViewHeaderRow);
+        Loaded += (_, _) => LayoutUpdated += OnHeaderLayoutUpdated;
+        Unloaded += (_, _) => LayoutUpdated -= OnHeaderLayoutUpdated;
+    }
+
+    /// <summary>Rechecks star sizing when layout resolves the selection gutter or scrollbar space.</summary>
+    private void OnHeaderLayoutUpdated(object? sender, object e)
+    {
+        if (!IsLoaded || _calculatingHeaderWidths || TableView is null ||
+            !TableView.Columns.VisibleColumns.Any(c => c.Width.IsStar)) { return; }
+        var available = GetAvailableColumnsWidth();
+        if (double.IsNaN(_availableColumnsWidth) || Math.Abs(available - _availableColumnsWidth) > 0.5)
+        {
+            CalculateHeaderWidths();
+        }
+    }
+
+    /// <summary>Gets the inner table width after the row-header gutter and vertical scrollbar.</summary>
+    private double GetAvailableColumnsWidth()
+    {
+        if (TableView is null) { return 0; }
+        return Math.Max(0, TableView.ActualWidth - TableView.BorderThickness.Left - TableView.BorderThickness.Right
+            - TableView.CellsHorizontalOffset - (_v_gridLine is { Visibility: Visibility.Visible } ? _v_gridLine.ActualWidth : 0)
+            - TableView.VerticalScrollBarWidth);
     }
 
     /// <inheritdoc/>
@@ -278,16 +302,19 @@ public partial class TableViewHeaderRow : Control
 
             var allColumns = TableView.Columns.VisibleColumns.ToList();
             var starColumns = allColumns.Where(x => x.Width.IsStar).ToList();
-            var autoColumns = allColumns.Where(x => x.Width.IsAuto).ToList();
-            var absoluteColumns = allColumns.Where(x => x.Width.IsAbsolute).ToList();
+            // Budget the same constrained widths that will be assigned below, even on first layout.
+            var fixedWidths = allColumns.Where(x => !x.Width.IsStar).ToDictionary(x => x, x =>
+                Math.Min(x.MaxWidth ?? TableView.MaxColumnWidth, Math.Max(x.MinWidth ?? TableView.MinColumnWidth,
+                    x.Width.IsAbsolute ? x.Width.Value : GetColumnDesiredWidth(x))));
 
-            var availableWidth = TableView.ActualWidth - 32;
+            var availableWidth = GetAvailableColumnsWidth();
+            if (double.IsNaN(_availableColumnsWidth) && starColumns.Count > 0)
+            {
+                System.Diagnostics.Debug.WriteLine("[TableView] Initial star sizing available=" + availableWidth);
+            }
+            _availableColumnsWidth = availableWidth;
             var starUnitWeight = starColumns.Select(x => x.Width.Value).Sum();
-
-            var fixedWidth = autoColumns.Select(GetColumnDesiredWidth).Sum();
-            fixedWidth += absoluteColumns.Select(x => x.ActualWidth).Sum();
-
-            availableWidth -= fixedWidth;
+            availableWidth -= fixedWidths.Values.Sum();
             var starUnitWidth = starUnitWeight > 0 ? availableWidth / starUnitWeight : 0;
 
             var starWidthAdjusted = false;
@@ -328,8 +355,7 @@ public partial class TableViewHeaderRow : Control
                 {
                     var width = column.Width.IsStar
                                 ? starUnitWidth * column.Width.Value
-                                : column.Width.IsAbsolute ? column.Width.Value
-                                : GetColumnDesiredWidth(column);
+                                : fixedWidths[column];
 
                     var minWidth = column.MinWidth ?? TableView.MinColumnWidth;
                     var maxWidth = column.MaxWidth ?? TableView.MaxColumnWidth;

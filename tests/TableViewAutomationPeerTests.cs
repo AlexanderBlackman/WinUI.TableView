@@ -319,6 +319,34 @@ public class TableViewAutomationPeerTests
         Assert.AreEqual("Custom Header", peer.GetName());
     }
 
+    [UITestMethod]
+    public void TableViewColumnHeaderAutomationPeer_ExplicitNameRetainsSortAndFilterState()
+    {
+        var column = new TableViewTextColumn { Header = "AI", SortDirection = SortDirection.Descending, IsFiltered = true };
+        var header = new TableViewColumnHeader { Column = column };
+        AutomationProperties.SetName(header, "AI batch under review");
+        var name = new TableViewColumnHeaderAutomationPeer(header).GetName();
+        StringAssert.Contains(name, "AI batch under review");
+        StringAssert.Contains(name, TableViewLocalizedStrings.SortDescending);
+        StringAssert.Contains(name, TableViewLocalizedStrings.Filtered);
+    }
+
+    [UITestMethod]
+    public void TableViewColumnHeaderAutomationPeer_UsesHostGestureHelp()
+    {
+        var header = new TableViewColumnHeader { Column = new TableViewTextColumn() };
+        AutomationProperties.SetHelpText(header, "Right-click to filter");
+        Assert.AreEqual("Right-click to filter", new TableViewColumnHeaderAutomationPeer(header).GetHelpText());
+    }
+
+    [UITestMethod]
+    public void TableViewRowAutomationPeer_GlyphHeaderUsesAccessibleLabel()
+    {
+        var glyph = new TextBlock { Text = "\uE823" };
+        AutomationProperties.SetName(glyph, "Schedule");
+        Assert.AreEqual("Schedule", TableViewRowAutomationPeer.GetColumnHeaderText(new TableViewTemplateColumn { Header = glyph }));
+    }
+
     // ─── TableViewRowHeaderAutomationPeer ───────────────────────────────────
 
     [UITestMethod]

@@ -131,6 +131,8 @@ public partial class TableViewRowAutomationPeer : ListViewItemAutomationPeer, IE
         return column.Header switch
         {
             string s => s,
+            Microsoft.UI.Xaml.UIElement element when !string.IsNullOrEmpty(AutomationProperties.GetName(element)) => AutomationProperties.GetName(element),
+            Microsoft.UI.Xaml.Controls.TextBlock text => text.Text,
             { } obj => obj.ToString() ?? string.Empty,
             _ => string.Empty
         };

@@ -54,6 +54,7 @@ public partial class TableViewColumnHeader : ContentControl
         ManipulationMode = ManipulationModes.TranslateX;
         RegisterPropertyChangedCallback(WidthProperty, OnWidthChanged);
         RightTapped += OnRightTapped;
+        ContextRequested += OnContextRequested;
     }
 
     /// <summary>
@@ -72,18 +73,42 @@ public partial class TableViewColumnHeader : ContentControl
     /// </summary>
     private void OnRightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        // Check if right-click is enabled via TableView or column is currently resizing
-        if (_tableView?.UseRightClickForColumnFilter != true || IsSizingCursor)
+        e.Handled = TryShowFilterFlyout();
+    }
+
+    private void OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
+    {
+        args.Handled = TryShowFilterFlyout();
+    }
+
+    private bool TryShowFilterFlyout()
+    {
+        if (_tableView?.UseRightClickForColumnFilter != true || !CanFilter ||
+            IsSizingCursor || _resizeStarted || _resizePreviousStarted || _optionsFlyout is null) { return false; }
+
+        if (!_optionsFlyout.IsOpen) { _optionsFlyout.ShowAt(this); }
+        return true;
+    }
+
+    /// <inheritdoc/>
+    protected override void OnKeyDown(KeyRoutedEventArgs e)
+    {
+        if (!e.Handled && _tableView?.UseRightClickForColumnFilter == true)
         {
-            return;
+            var shift = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
+            if (e.Key == VirtualKey.Application || (e.Key == VirtualKey.F10 && shift))
+            {
+                e.Handled = TryShowFilterFlyout();
+            }
+            else if ((e.Key == VirtualKey.Enter || e.Key == VirtualKey.Space) && CanSort)
+            {
+                var ctrl = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+                DoSort(GetNextSortDirection(), !ctrl);
+                e.Handled = true;
+            }
         }
 
-        // Shows the button's flyout if options button is available and filtering is enabled
-        if (_optionsButton is not null && CanFilter)
-        {
-            _optionsButton.Flyout?.ShowAt(_optionsButton);
-            e.Handled = true;
-        }
+        base.OnKeyDown(e);
     }
 
     /// <summary>
@@ -243,7 +268,7 @@ public partial class TableViewColumnHeader : ContentControl
         _contentPresenter = GetTemplateChild("ContentPresenter") as ContentPresenter;
         _v_gridLine = GetTemplateChild("VerticalGridLine") as Rectangle;
 
-        if (_tableView is null || _optionsButton is null || _optionsFlyout is null)
+        if (_tableView is null || _optionsFlyout is null)
         {
             return;
         }
@@ -251,11 +276,13 @@ public partial class TableViewColumnHeader : ContentControl
         _optionsFlyout.TableView = _tableView;
         _optionsFlyout.ColumnHeader = this;
 
-        _optionsButton.Tapped += OnOptionsButtonTaped;
+        if (_optionsButton is not null) { _optionsButton.Tapped += OnOptionsButtonTaped; }
 
         SetOptionCommands();
         SetFilterButtonVisibility();
         EnsureGridLines();
+        OnSortDirectionChanged();
+        OnIsFilteredChanged();
     }
 
     /// <summary>
@@ -307,7 +334,7 @@ public partial class TableViewColumnHeader : ContentControl
     {
         _optionsButton?.Visibility = CanFilter ? Visibility.Visible : Visibility.Collapsed;
 
-        _contentPresenter?.Margin = CanFilter ? new Thickness(
+        _contentPresenter?.Margin = CanFilter && _optionsButton is not null ? new Thickness(
                 Padding.Left,
                 Padding.Top,
                 Padding.Right + 8,
